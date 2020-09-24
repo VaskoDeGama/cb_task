@@ -1,4 +1,3 @@
-
 /**
  * series, which takes an array of functions and a final callback as input.
  * The passed functions must be called sequentially - after the first successful
@@ -18,40 +17,57 @@
  * Каждая функция принимает на вход ровно один аргумент - функцию-callback.
  * В этом задании все переданные функции используют "стандартную" сигнатуру callback - (err, result)
  * Задачу необходимо решить без использования Promise
- *
+ */
+
+/**
+ * Series
+ * @param arr
+ * @param resultCb
+ * @param trace
+ */
+
+const runSeries = (arr, resultCb, trace = { was: [], current: 0, startLength: 0, wasErr: false }) => {
+  try {
+    if (trace.current === 0) {
+      trace.startLength = arr.length
+    }
+
+    const currentFunction = arr.shift()
+
+    currentFunction((err, result) => {
+      if (err) {
+        console.log(trace)
+
+        trace.wasErr = true
+        return resultCb(err)
+      }
+
+      if (arr.length === 0 && !trace.wasErr) {
+        console.log(trace)
+
+        return resultCb(null, result)
+      }
+
+      if (!trace.wasErr) {
+        console.log(trace)
+        trace.current += 1
+
+        return runSeries(arr, resultCb, trace)
+      }
+    })
+  } catch (err) {
+    resultCb(err)
+  }
+}
+
+/**
+ * Wrapper
  * @param arrayOfFunctions
  * @param resultCb
  */
+
 function series (arrayOfFunctions, resultCb) {
   const arr = [...arrayOfFunctions]
-
-  const runSeries = (arr, cb, trace = { startLength: 0, current: 0 }) => {
-    try {
-      const currentFunc = arr.shift()
-
-      if (arr.length === 0 && currentFunc) {
-        currentFunc((err, result) => {
-          if (err) {
-            return cb(err)
-          }
-
-          cb(null, result)
-        })
-      } else {
-        if (currentFunc) {
-          currentFunc((err, result) => {
-            if (err) {
-              return cb(err)
-            }
-
-            runSeries(arr, cb)
-          })
-        }
-      }
-    } catch (err) {
-      cb(err)
-    }
-  }
 
   runSeries(arr, resultCb)
 }
