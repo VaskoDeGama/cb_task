@@ -7,26 +7,29 @@ describe('Series:', () => {
     })
     test('test without error', () => {
       const mockCallback = jest.fn()
-
+      const arr = [0, 0, 0]
       const testFunc1 = (cb) => {
+        arr[0] = 1
         cb(null)
       }
       const testFunc2 = (cb) => {
+        arr[1] = 1
         cb(null)
       }
       const testFunc3 = (cb) => {
+        arr[2] = 1
         cb(null)
       }
 
       const array = [testFunc1, testFunc2, testFunc3]
 
       series(array, mockCallback)
+      expect(arr).toEqual([1, 1, 1])
       expect(mockCallback).toBeCalled()
       expect(mockCallback.mock.calls.length).toEqual(1)
     })
     test('test with error', () => {
       const mockCallback = jest.fn()
-
       const testFunc = (cb) => {
         try {
           cb(null)
@@ -35,11 +38,7 @@ describe('Series:', () => {
         }
       }
       const testWithError = (cb) => {
-        try {
-          throw Error('Error')
-        } catch (e) {
-          cb(e)
-        }
+        throw Error('Error')
       }
 
       const array = [testFunc, testWithError, testFunc, testFunc]
@@ -65,7 +64,7 @@ describe('Series:', () => {
         cb(null)
       }
 
-      const array = [testFunc1, testFunc2, testFunc3, testFuncTwice]
+      const array = [ testFunc1, testFuncTwice, testFunc2, testFunc3 ]
 
       series(array, mockCallback)
 
@@ -117,20 +116,32 @@ describe('Series:', () => {
 
       expect.assertions(2)
 
+      const arr = [0, 0, 0, 0]
       const f1 = cb => setTimeout(() => {
+        arr[0] += 1
         cb()
         cb()
       }, 20, null, 'res')
-      const f2 = cb => setTimeout(cb, 60, null, 'res')
+      const f2 = cb => setTimeout(() => {
+        arr[1] += 1
+        cb()
+      }, 60, null, 'res')
       const f3 = cb => setTimeout(() => {
+        arr[2] += 1
+        cb()
         cb()
         cb()
       }, 20, null, 'res')
-      const f4 = cb => setTimeout(cb, 120, null, 'res')
+      const f4 = cb => setTimeout(() => {
+        arr[3] += 1
+        cb()
+      }, 120, null, 'res')
 
       series([f1, f2, f3, f4], mockCallback)
 
       setTimeout(() => {
+        console.log(arr)
+        console.log(mockCallback.mock.calls)
         expect(mockCallback).toBeCalled()
         expect(mockCallback.mock.calls.length).toEqual(1)
 
@@ -140,27 +151,34 @@ describe('Series:', () => {
     test('test simple', done => {
       const mockCallback = jest.fn()
 
-      expect.assertions(2)
+      expect.assertions(3)
 
+      const arr = Array.from({ length: 5 }).fill(0)
       const f1 = cb => setTimeout(() => {
+        arr[0] = 1
         cb()
       }, 120, null, 'res')
       const f2 = cb => setTimeout(() => {
+        arr[1] = 1
         cb()
       }, 120, null, 'res')
       const f3 = cb => setTimeout(() => {
+        arr[2] = 1
         cb()
       }, 120, null, 'res')
       const f4 = cb => setTimeout(() => {
+        arr[3] = 1
         cb()
       }, 120, null, 'res')
       const f5 = cb => setTimeout(() => {
+        arr[4] = 1
         cb()
       }, 120, null, 'res')
 
       series([f1, f2, f3, f4, f5], mockCallback)
 
       setTimeout(() => {
+        expect(arr).toEqual([1, 1, 1, 1, 1])
         expect(mockCallback).toBeCalled()
         expect(mockCallback.mock.calls.length).toEqual(1)
 

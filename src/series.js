@@ -21,22 +21,39 @@
  *
  * @param arrayOfFunctions
  * @param resultCb
- * @returns {boolean}
  */
 function series (arrayOfFunctions, resultCb) {
-  const currentFunction = arrayOfFunctions.shift()
+  const arr = [...arrayOfFunctions]
 
-  if (currentFunction) {
-    currentFunction((err) => {
-      if (err) {
-        return resultCb(err)
+  const runSeries = (arr, cb, trace = { startLength: 0, current: 0 }) => {
+    try {
+      const currentFunc = arr.shift()
+
+      if (arr.length === 0 && currentFunc) {
+        currentFunc((err, result) => {
+          if (err) {
+            return cb(err)
+          }
+
+          cb(null, result)
+        })
       } else {
-        series(arrayOfFunctions, resultCb)
+        if (currentFunc) {
+          currentFunc((err, result) => {
+            if (err) {
+              return cb(err)
+            }
+
+            runSeries(arr, cb)
+          })
+        }
       }
-    })
-  } else {
-    return resultCb(null)
+    } catch (err) {
+      cb(err)
+    }
   }
+
+  runSeries(arr, resultCb)
 }
 
 module.exports = series
