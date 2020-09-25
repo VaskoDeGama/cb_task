@@ -14,7 +14,6 @@ describe('Series:', () => {
       series([f1], spy)
 
       setTimeout(() => {
-        console.log(spy.mock.calls)
         expect(spy).toBeCalled()
         expect(spy.mock.calls.length).toEqual(1)
         expect(spy.mock.calls[0][1]).toEqual('res')
@@ -33,7 +32,6 @@ describe('Series:', () => {
       series([f1], spy)
 
       setTimeout(() => {
-        console.log(spy.mock.calls)
         expect(spy).toBeCalled()
         expect(spy.mock.calls.length).toEqual(1)
         expect(spy.mock.calls[0][0]).toEqual('error')
@@ -55,7 +53,6 @@ describe('Series:', () => {
       series([f1, f2], spy)
 
       setTimeout(() => {
-        console.log(spy.mock.calls)
         expect(spy).toBeCalled()
         expect(spy.mock.calls.length).toEqual(1)
         expect(spy.mock.calls[0][1]).toEqual('res')
@@ -101,6 +98,7 @@ describe('Series:', () => {
         }
       }
       const testWithError = (cb) => {
+        cb()
         throw Error('Error')
       }
 
@@ -177,7 +175,7 @@ describe('Series:', () => {
     test('test twice call', done => {
       const mockCallback = jest.fn()
 
-      expect.assertions(2)
+      expect.assertions(3)
 
       const arr = [0, 0, 0, 0]
       const f1 = cb => setTimeout(() => {
@@ -203,9 +201,8 @@ describe('Series:', () => {
       series([f1, f2, f3, f4], mockCallback)
 
       setTimeout(() => {
-        console.log(arr)
-        console.log(mockCallback.mock.calls)
         expect(mockCallback).toBeCalled()
+        expect(arr).toEqual([ 1, 1, 1, 1 ])
         expect(mockCallback.mock.calls.length).toEqual(1)
 
         done()
@@ -262,15 +259,11 @@ describe('Series:', () => {
         arr[1] = 1
         cb()
       }, 120, null, 'res')
-      const f3 = cb => setTimeout(async () => {
+      const f3 = cb => {
         cb()
         arr[2] = 1
-        await new Promise(resolve => setTimeout(resolve, 2000))
-
-        const i = 1
-
-        i = 3
-      }, 10, null, 'res')
+        throw Error('LONG ERROR')
+      }
       const f4 = cb => setTimeout(() => {
         arr[3] = 1
         cb()
@@ -284,12 +277,11 @@ describe('Series:', () => {
 
       setTimeout(() => {
         expect(arr).toEqual([1, 1, 1, 1, 1])
-        console.log(mockCallback.mock.calls)
         expect(mockCallback).toBeCalled()
         expect(mockCallback.mock.calls.length).toEqual(1)
 
         done()
-      }, 3000)
+      }, 1000)
     })
   })
 })

@@ -35,9 +35,13 @@ const nextCb = (err, res, arr, safeSCb) => {
   const nextF = safeCbFabric(arr.pop())
 
   if (nextF) {
-    nextF((err, res) => {
-      nextCb(err, res, arr, safeSCb)
-    })
+    try {
+      nextF((err, res) => {
+        nextCb(err, res, arr, safeSCb)
+      })
+    } catch (error) {
+      safeSCb(error)
+    }
   } else {
     safeSCb(null, res)
   }
@@ -58,6 +62,7 @@ const safeCbFabric = (cb) => {
       }
 
       flag = true
+
       cb(err, res)
     }
   }
