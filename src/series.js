@@ -20,77 +20,85 @@
  */
 
 /**
- * Gen and call next callback
- * @param err
- * @param res
- * @param arr
- * @param safeSCb
- * @returns {*}
- */
-const nextCb = (err, res, arr, safeSCb) => {
-  if (err) {
-    return safeSCb(err)
-  }
-
-  const nextF = arr.pop()
-
-  if (nextF) {
-    const safeNext = safeCbFabric(nextF)
-
-    try {
-      safeNext((err, res) => {
-        nextCb(err, res, arr, safeSCb)
-      })
-    } catch (error) {
-      safeSCb(error)
-    }
-  } else {
-    safeSCb(null, res)
-  }
-}
-
-/**
- * fabric safe callbacks
- * @returns {*}
- */
-
-const safeCbFabric = (cb) => {
-  let flag = false
-
-  return (err, res) => {
-    if (flag) {
-      return false
-    }
-
-    flag = true
-
-    cb(err, res)
-  }
-}
-
-/**
- * Series exp
- * @param resCb
- * @param arr
- */
-
-const runSeries = (arr, resCb) => {
-  const safeSCb = safeCbFabric(resCb)
-
-  const f = arr.pop()
-
-  f((err, res) => {
-    nextCb(err, res, arr, safeSCb)
-  })
-}
-
-/**
  * HOF
  * @param arrayOfFunctions
  * @param resultCb
  */
 
 function series (arrayOfFunctions, resultCb) {
+  let wasErr = false
+
+  /**
+   * Gen and call next callback
+   * @param err
+   * @param res
+   * @param arr
+   * @param safeSCb
+   * @returns {*}
+   */
+
+  const nextCb = (err, res, arr, safeSCb) => {
+    if (err) {
+      wasErr = true
+      return safeSCb(err)
+    }
+
+    if (wasErr) {
+      arr = []
+    }
+
+    const nextF = arr.pop()
+
+    if (nextF) {
+      const safeNext = safeCbFabric(nextF)
+
+      try {
+        safeNext((err, res) => {
+          nextCb(err, res, arr, safeSCb)
+        })
+      } catch (error) {
+        wasErr = true
+        safeSCb(error)
+      }
+    } else {
+      safeSCb(null, res)
+    }
+  }
+
+  /**
+ * fabric safe callbacks
+ * @returns {*}
+ */
+
+  const safeCbFabric = (cb) => {
+    let flag = false
+
+    return (err, res) => {
+      if (flag) {
+        return false
+      }
+
+      flag = true
+
+      cb(err, res)
+    }
+  }
+
+  /**
+ * Series exp
+ * @param resCb
+ * @param arr
+ */
+
+  const runSeries = (arr, resCb) => {
+    const safeSCb = safeCbFabric(resCb)
+    const f = arr.pop()
+
+    f((err, res) => {
+      nextCb(err, res, arr, safeSCb)
+    })
+  }
+
   const arr = [...arrayOfFunctions].reverse()
 
   runSeries(arr, resultCb)

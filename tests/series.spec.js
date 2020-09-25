@@ -250,33 +250,64 @@ describe('Series:', () => {
 
       expect.assertions(3)
 
-      const arr = Array.from({ length: 5 }).fill(0)
+      const arr = []
       const f1 = cb => setTimeout(() => {
-        arr[0] = 1
+        arr.push('f1_start')
         cb()
+        arr.push('f1_end')
       }, 120, null, 'res')
       const f2 = cb => setTimeout(() => {
-        arr[1] = 1
+        arr.push('f2_start')
         cb()
+        arr.push('f2_end')
       }, 120, null, 'res')
       const f3 = cb => {
+        arr.push('f3_start')
         cb()
-        arr[2] = 1
         throw Error('LONG ERROR')
       }
       const f4 = cb => setTimeout(() => {
-        arr[3] = 1
+        arr.push('f4_start')
         cb()
+        arr.push('f4_end')
       }, 120, null, 'res')
       const f5 = cb => setTimeout((err, res) => {
-        arr[4] = 1
+        arr.push('f5_start')
         cb(err, res)
+        arr.push('f5_end')
+      }, 400, null, 'res')
+      const f6 = cb => setTimeout((err, res) => {
+        arr.push('f6_start')
+        cb(err, res)
+        arr.push('f6_end')
+      }, 400, null, 'res')
+      const f7 = cb => setTimeout((err, res) => {
+        arr.push('f7_start')
+        cb(err, res)
+        arr.push('f7_end')
+      }, 400, null, 'res')
+      const f8 = cb => setTimeout((err, res) => {
+        arr.push('f8_start')
+        cb(err, res)
+        arr.push('f8_end')
+      }, 400, null, 'res')
+      const f9 = cb => setTimeout((err, res) => {
+        arr.push('f9_start')
+        cb(err, res)
+        arr.push('f9_end')
+      }, 400, null, 'res')
+      const f10 = cb => setTimeout((err, res) => {
+        arr.push('f10_start')
+        cb(err, res)
+        arr.push('f10_end')
       }, 400, null, 'res')
 
-      series([f1, f2, f3, f4, f5], mockCallback)
+      series([f1, f2, f3, f4, f5, f6, f7, f8, f9, f10], mockCallback)
 
       setTimeout(() => {
-        expect(arr).toEqual([1, 1, 1, 1, 1])
+        expect(arr).toEqual([
+          'f1_start', 'f1_end', 'f2_start', 'f3_start', 'f2_end', 'f4_start', 'f4_end'
+        ])
         expect(mockCallback).toBeCalled()
         expect(mockCallback.mock.calls.length).toEqual(1)
 
