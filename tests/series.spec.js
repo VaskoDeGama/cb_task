@@ -80,28 +80,37 @@ describe('Series:', () => {
       const arr = [0, 0, 0, 0]
       const testFunc1 = (cb) => {
         arr[0] += 1
-        cb(null)
+        console.log('test 1')
+        cb(null, 'test1')
       }
       const testFunc2 = (cb) => {
         arr[1] += 1
-        cb(null)
-      }
-      const testFunc3 = (cb) => {
-        arr[2] += 1
-        cb(null)
+        console.log('test 2')
+
+        cb(null, 'test2')
       }
       const testFuncTwice = (cb) => {
+        console.log('test twice')
+
         arr[3] += 1
-        cb(null)
-        cb(null)
+        cb(null, 'helllo')
+        cb(null, 'bro')
+      }
+      const testFunc3 = (cb) => {
+        console.log('test 3')
+
+        arr[2] += 1
+        cb(null, 'test3')
       }
 
       const array = [testFunc1, testFuncTwice, testFunc2, testFunc3]
 
       series(array, mockCallback)
+      console.log(mockCallback.mock.calls)
       expect(arr).toEqual([1, 1, 1, 1])
       expect(mockCallback).toBeCalled()
       expect(mockCallback.mock.calls.length).toEqual(1)
+      expect(mockCallback.mock.calls[0][1]).toEqual('test3')
     })
   })
   describe('my tests', () => {
@@ -161,13 +170,17 @@ describe('Series:', () => {
         cb()
         cb()
       }, 1, null)
-      const f3 = cb => setTimeout(cb, 30, null)
+      const f3 = cb => setTimeout(() => {
+        cb(null, 'hello from last')
+      }, 30, null)
 
       series([f1, f2, f3], mockCallback)
 
       setTimeout(() => {
         expect(mockCallback).toBeCalled()
+        console.log(mockCallback.mock.calls)
         expect(mockCallback.mock.calls.length).toEqual(1)
+        expect(mockCallback.mock.calls[0][1]).toEqual('hello from last')
 
         done()
       }, 100)
@@ -203,8 +216,11 @@ describe('Series:', () => {
 
       setTimeout(() => {
         expect(arr).toEqual([1, 1, 1, 1])
+        console.log(mockCallback.mock.calls)
+
         expect(mockCallback).toBeCalled()
         expect(mockCallback.mock.calls.length).toEqual(1)
+        expect(mockCallback.mock.calls[0][1]).toEqual('hello from last')
 
         done()
       }, 200)

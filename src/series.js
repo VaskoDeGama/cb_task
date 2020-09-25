@@ -26,7 +26,7 @@
  * @param trace
  */
 
-const runSeries = (arr, resultCb, trace = { was: [], current: 0, startLength: 0, wasErr: false }) => {
+const runSeries = (arr, resultCb, trace = { allDone: false, current: 0, startLength: 0, wasErr: false }) => {
   try {
     if (trace.current === 0) {
       trace.startLength = arr.length
@@ -34,27 +34,22 @@ const runSeries = (arr, resultCb, trace = { was: [], current: 0, startLength: 0,
 
     const currentFunction = arr.shift()
 
-    currentFunction((err, result) => {
-      if (err) {
-        console.log(trace)
+    if (currentFunction) {
+      currentFunction((err, result) => {
+        if (err) {
+          trace.wasErr = true
+          return resultCb(err)
+        }
 
-        trace.wasErr = true
-        return resultCb(err)
-      }
+        if (arr.length === 0 && !trace.wasErr) {
+          return resultCb(null, result)
+        }
 
-      if (arr.length === 0 && !trace.wasErr) {
-        console.log(trace)
-
-        return resultCb(null, result)
-      }
-
-      if (!trace.wasErr) {
-        console.log(trace)
-        trace.current += 1
-
-        return runSeries(arr, resultCb, trace)
-      }
-    })
+        if (!trace.wasErr) {
+          return runSeries(arr, resultCb, trace)
+        }
+      })
+    }
   } catch (err) {
     resultCb(err)
   }
