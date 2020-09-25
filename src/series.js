@@ -32,11 +32,13 @@ const nextCb = (err, res, arr, safeSCb) => {
     return safeSCb(err)
   }
 
-  const nextF = safeCbFabric(arr.pop())
+  const nextF = arr.pop()
 
   if (nextF) {
+    const safeNext = safeCbFabric(nextF)
+
     try {
-      nextF((err, res) => {
+      safeNext((err, res) => {
         nextCb(err, res, arr, safeSCb)
       })
     } catch (error) {
@@ -55,19 +57,15 @@ const nextCb = (err, res, arr, safeSCb) => {
 const safeCbFabric = (cb) => {
   let flag = false
 
-  if (cb) {
-    return (err, res) => {
-      if (flag) {
-        return false
-      }
-
-      flag = true
-
-      cb(err, res)
+  return (err, res) => {
+    if (flag) {
+      return false
     }
-  }
 
-  return cb
+    flag = true
+
+    cb(err, res)
+  }
 }
 
 /**

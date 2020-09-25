@@ -92,6 +92,43 @@ describe('Parallel:', () => {
         done()
       }, 100)
     })
+    test('test throw', done => {
+      const mockCallback = jest.fn()
+
+      expect.assertions(2)
+
+      const f1 = cb => {
+        cb()
+        throw Error('err')
+      }
+      const f2 = cb => setTimeout(cb, 30, 'error2')
+
+      parallel([f1, f2], mockCallback)
+
+      setTimeout(() => {
+        expect(mockCallback).toBeCalled()
+        expect(mockCallback.mock.calls.length).toEqual(1)
+
+        done()
+      }, 100)
+    })
+    test('test not func', done => {
+      const mockCallback = jest.fn()
+
+      expect.assertions(2)
+
+      const f1 = 'kek'
+      const f2 = cb => setTimeout(cb, 30, 'error2')
+
+      parallel([f1, f2], mockCallback)
+
+      setTimeout(() => {
+        expect(mockCallback).toBeCalled()
+        expect(mockCallback.mock.calls.length).toEqual(1)
+
+        done()
+      }, 100)
+    })
 
     test('test only one error call2', done => {
       const mockCallback = jest.fn()
