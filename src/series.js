@@ -19,47 +19,102 @@
  * Задачу необходимо решить без использования Promise
  */
 
-/**
- * Series
- * @param arr
- * @param resultCb
- * @param trace
- */
+const nextCb = (err, res, arr, safeSCb) => {
+  if (err) {
+    return safeSCb(err)
+  }
 
-const runSeries = (arr, resultCb) => {
+  const nextF = safeCbFabric(arr.shift())
+
   try {
-    const nope = () => {}
-    let wasDone = false
-    let wasErr = false
-    let allDone = false
-    let result = null
-
-    for (const func of arr) {
-      wasDone = false
-      func((err, res) => {
-        if (err) {
-          wasErr = true
-          return resultCb(err)
-        }
-
-        wasDone = true
-        result = res
+    if (nextF) {
+      nextF((err, res) => {
+        nextCb(err, res, arr, safeSCb)
       })
-
-      while (!wasDone) {
-        nope()
-      }
+    } else {
+      safeSCb(null, res)
     }
-
-    allDone = true
-
-    if (!wasErr && allDone) {
-      return resultCb(null, result)
-    }
-  } catch (err) {
-    resultCb(err)
+  } catch (e) {
+    safeSCb(err)
   }
 }
+
+/**
+ * cb fabric callback
+ * @returns {*}
+ */
+
+const safeCbFabric = (cb) => {
+  let flag = false
+
+  if (cb) {
+    return (err, res) => {
+      if (flag) {
+        return false
+      }
+
+      flag = true
+      cb(err, res)
+    }
+  }
+
+  return cb
+}
+
+/**
+ * Series
+ * @param resCb
+ * @param arr
+ */
+
+const runSeries = (arr, resCb) => {
+  const safeSCb = safeCbFabric(resCb)
+  const f = arr.shift()
+
+  f((err, res) => {
+    nextCb(err, res, arr, safeSCb)
+  })
+}
+
+// const [f1, f2, f3, f4, f5] = arr
+// let wasErr = false
+
+// f1((err, res) => {
+//   if (err) {
+//     wasErr = true
+//     resCb(err)
+//   } else if (!wasErr) {
+//     f2((err, res) => {
+//       if (err) {
+//         wasErr = true
+//         resCb(err)
+//       } else if (!wasErr) {
+//         f3((err, res) => {
+//           if (err) {
+//             wasErr = true
+//             resCb(err)
+//           } else if (!wasErr) {
+//             f4((err, res) => {
+//               if (err) {
+//                 wasErr = true
+//                 resCb(err)
+//               } else if (!wasErr) {
+//                 f5((err, res) => {
+//                   if (err) {
+//                     wasErr = true
+//                     resCb(err)
+//                   } else if (!wasErr) {
+//                     resCb(null, res)
+//                   }
+//                 })
+//               }
+//             })
+//           }
+//         })
+//       }
+//     })
+//   }
+// })
 
 /**
  * Wrapper
