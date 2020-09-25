@@ -26,29 +26,35 @@
  * @param trace
  */
 
-const runSeries = (arr, resultCb, trace = { allDone: false, current: 0, startLength: 0, wasErr: false }) => {
+const runSeries = (arr, resultCb) => {
   try {
-    if (trace.current === 0) {
-      trace.startLength = arr.length
-    }
+    const nope = () => {}
+    let wasDone = false
+    let wasErr = false
+    let allDone = false
+    let result = null
 
-    const currentFunction = arr.shift()
-
-    if (currentFunction) {
-      currentFunction((err, result) => {
+    for (const func of arr) {
+      wasDone = false
+      func((err, res) => {
         if (err) {
-          trace.wasErr = true
+          wasErr = true
           return resultCb(err)
         }
 
-        if (arr.length === 0 && !trace.wasErr) {
-          return resultCb(null, result)
-        }
-
-        if (!trace.wasErr) {
-          return runSeries(arr, resultCb, trace)
-        }
+        wasDone = true
+        result = res
       })
+
+      while (!wasDone) {
+        nope()
+      }
+    }
+
+    allDone = true
+
+    if (!wasErr && allDone) {
+      return resultCb(null, result)
     }
   } catch (err) {
     resultCb(err)

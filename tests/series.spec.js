@@ -1,7 +1,7 @@
 const series = require('../src/series')
 
 describe('Series:', () => {
-  describe('Base tests:', () => {
+  describe('SYNC tests:', () => {
     test('well be define', () => {
       expect(series).toBeDefined()
     })
@@ -113,118 +113,7 @@ describe('Series:', () => {
       expect(mockCallback.mock.calls[0][1]).toEqual('test3')
     })
   })
-  describe('my tests', () => {
-    test('test only one error call', done => {
-      const mockCallback = jest.fn()
-
-      expect.assertions(2)
-
-      const f1 = cb => setTimeout(cb, 1, 'error1')
-      const f2 = cb => setTimeout(cb, 30, 'error2')
-
-      series([f1, f2], mockCallback)
-      setTimeout(() => {
-        expect(mockCallback).toBeCalled()
-        expect(mockCallback.mock.calls.length).toEqual(1)
-
-        done()
-      }, 100)
-    })
-    test('return from last callback ', done => {
-      const mockCallback = jest.fn()
-
-      expect.assertions(4)
-
-      const arr = [0, 0, 0]
-      const f1 = cb => setTimeout(() => {
-        arr[0] += 1
-        cb()
-      }, 1, null)
-      const f2 = cb => setTimeout(() => {
-        arr[1] += 1
-        cb()
-      }, 1, null)
-      const f3 = cb => setTimeout(() => {
-        arr[2] += 1
-        cb(null, 'hello from hell')
-      }, 30, null)
-
-      series([f1, f2, f3], mockCallback)
-
-      setTimeout(() => {
-        expect(mockCallback).toBeCalled()
-        expect(arr).toEqual([1, 1, 1])
-        expect(mockCallback.mock.calls.length).toEqual(1)
-        expect(mockCallback.mock.calls[0][1]).toEqual('hello from hell')
-
-        done()
-      }, 100)
-    })
-    test('simple twice call', done => {
-      const mockCallback = jest.fn()
-
-      expect.assertions(2)
-
-      const f1 = cb => setTimeout(cb, 1, null)
-      const f2 = cb => setTimeout(() => {
-        cb()
-        cb()
-      }, 1, null)
-      const f3 = cb => setTimeout(() => {
-        cb(null, 'hello from last')
-      }, 30, null)
-
-      series([f1, f2, f3], mockCallback)
-
-      setTimeout(() => {
-        expect(mockCallback).toBeCalled()
-        console.log(mockCallback.mock.calls)
-        expect(mockCallback.mock.calls.length).toEqual(1)
-        expect(mockCallback.mock.calls[0][1]).toEqual('hello from last')
-
-        done()
-      }, 100)
-    })
-
-    test('test twice call', done => {
-      const mockCallback = jest.fn()
-
-      expect.assertions(3)
-
-      const arr = [0, 0, 0, 0]
-      const f1 = cb => setTimeout(() => {
-        arr[0] += 1
-        cb()
-        cb()
-      }, 20, null, 'res')
-      const f2 = cb => setTimeout(() => {
-        arr[1] += 1
-        cb()
-      }, 60, null, 'res')
-      const f3 = cb => setTimeout(() => {
-        arr[2] += 1
-        cb()
-        cb()
-        cb()
-      }, 20, null, 'res')
-      const f4 = cb => setTimeout(() => {
-        arr[3] += 1
-        cb(null, 'hello from last')
-      }, 120, null, 'res')
-
-      series([f1, f2, f3, f4], mockCallback)
-
-      setTimeout(() => {
-        expect(arr).toEqual([1, 1, 1, 1])
-        console.log(mockCallback.mock.calls)
-
-        expect(mockCallback).toBeCalled()
-        expect(mockCallback.mock.calls.length).toEqual(1)
-        expect(mockCallback.mock.calls[0][1]).toEqual('hello from last')
-
-        done()
-      }, 200)
-    })
+  describe('ASYNC tests', () => {
     test('test simple', done => {
       const mockCallback = jest.fn()
 
@@ -233,23 +122,28 @@ describe('Series:', () => {
       const arr = Array.from({ length: 5 }).fill(0)
       const f1 = cb => setTimeout(() => {
         arr[0] = 1
+        console.log('f1')
         cb()
       }, 120, null, 'res')
       const f2 = cb => setTimeout(() => {
         arr[1] = 1
+        console.log('f2')
         cb()
       }, 120, null, 'res')
       const f3 = cb => setTimeout(() => {
         arr[2] = 1
+        console.log('f3')
         cb()
       }, 120, null, 'res')
       const f4 = cb => setTimeout(() => {
         arr[3] = 1
+        console.log('f4')
         cb()
       }, 120, null, 'res')
-      const f5 = cb => setTimeout(() => {
+      const f5 = cb => setTimeout((err, res) => {
         arr[4] = 1
-        cb()
+        console.log('f5')
+        cb(null, res)
       }, 120, null, 'res')
 
       series([f1, f2, f3, f4, f5], mockCallback)
@@ -258,10 +152,124 @@ describe('Series:', () => {
         expect(arr).toEqual([1, 1, 1, 1, 1])
         expect(mockCallback).toBeCalled()
         expect(mockCallback.mock.calls.length).toEqual(1)
+        expect(mockCallback.mock.calls[0][1]).toEqual('res')
 
         done()
       }, 1500)
     })
+  })
+
+  test('test only one error call', done => {
+    const mockCallback = jest.fn()
+
+    expect.assertions(2)
+
+    const f1 = cb => setTimeout(cb, 1, 'error1')
+    const f2 = cb => setTimeout(cb, 30, 'error2')
+
+    series([f1, f2], mockCallback)
+    setTimeout(() => {
+      expect(mockCallback).toBeCalled()
+      expect(mockCallback.mock.calls.length).toEqual(1)
+      expect(mockCallback.mock.calls[0][0]).toEqual('error1')
+
+      done()
+    }, 100)
+  })
+  test('return from last callback ', done => {
+    const mockCallback = jest.fn()
+
+    expect.assertions(4)
+
+    const arr = [0, 0, 0]
+    const f1 = cb => setTimeout(() => {
+      arr[0] += 1
+      cb()
+    }, 1, null)
+    const f2 = cb => setTimeout(() => {
+      arr[1] += 1
+      cb()
+    }, 1, null)
+    const f3 = cb => setTimeout(() => {
+      arr[2] += 1
+      cb(null, 'hello from hell')
+    }, 30, null)
+
+    series([f1, f2, f3], mockCallback)
+
+    setTimeout(() => {
+      expect(mockCallback).toBeCalled()
+      expect(arr).toEqual([1, 1, 1])
+      expect(mockCallback.mock.calls.length).toEqual(1)
+      expect(mockCallback.mock.calls[0][1]).toEqual('hello from hell')
+
+      done()
+    }, 100)
+  })
+  test('simple twice call', done => {
+    const mockCallback = jest.fn()
+
+    expect.assertions(2)
+
+    const f1 = cb => setTimeout(cb, 1, null)
+    const f2 = cb => setTimeout(() => {
+      cb()
+      cb()
+    }, 1, null)
+    const f3 = cb => setTimeout(() => {
+      cb(null, 'hello from last')
+    }, 30, null)
+
+    series([f1, f2, f3], mockCallback)
+
+    setTimeout(() => {
+      expect(mockCallback).toBeCalled()
+      console.log(mockCallback.mock.calls)
+      expect(mockCallback.mock.calls.length).toEqual(1)
+      expect(mockCallback.mock.calls[0][1]).toEqual('hello from last')
+
+      done()
+    }, 100)
+  })
+
+  test('test twice call', done => {
+    const mockCallback = jest.fn()
+
+    expect.assertions(3)
+
+    const arr = [0, 0, 0, 0]
+    const f1 = cb => setTimeout(() => {
+      arr[0] += 1
+      cb()
+      cb()
+    }, 20, null, 'res')
+    const f2 = cb => setTimeout(() => {
+      arr[1] += 1
+      cb()
+    }, 60, null, 'res')
+    const f3 = cb => setTimeout(() => {
+      arr[2] += 1
+      cb()
+      cb()
+      cb()
+    }, 20, null, 'res')
+    const f4 = cb => setTimeout(() => {
+      arr[3] += 1
+      cb(null, 'hello from last')
+    }, 120, null, 'res')
+
+    series([f1, f2, f3, f4], mockCallback)
+
+    setTimeout(() => {
+      expect(arr).toEqual([1, 1, 1, 1])
+      console.log(mockCallback.mock.calls)
+
+      expect(mockCallback).toBeCalled()
+      expect(mockCallback.mock.calls.length).toEqual(1)
+      expect(mockCallback.mock.calls[0][1]).toEqual('hello from last')
+
+      done()
+    }, 200)
   })
 
   test('try to fall', async () => {
