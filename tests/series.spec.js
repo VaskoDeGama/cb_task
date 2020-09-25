@@ -54,6 +54,7 @@ describe('Series:', () => {
 
       setTimeout(() => {
         expect(spy).toBeCalled()
+        console.log(spy.mock.calls)
         expect(spy.mock.calls.length).toEqual(1)
         expect(spy.mock.calls[0][1]).toEqual('res')
 
@@ -90,19 +91,21 @@ describe('Series:', () => {
     })
     test('test with error', () => {
       const mockCallback = jest.fn()
-      const testFunc = (cb) => {
-        try {
-          cb(null)
-        } catch (e) {
-          cb(e)
-        }
+      const testFunc1 = (cb) => {
+        cb(null, 'not error')
+      }
+      const testFunc2 = (cb) => {
+        cb(null, 'not error')
+      }
+      const testFunc3 = (cb) => {
+        cb(null, 'not error')
       }
       const testWithError = (cb) => {
-        cb()
+        cb(null, 'weel be error')
         throw Error('Error')
       }
 
-      const array = [testFunc, testWithError, testFunc, testFunc]
+      const array = [testFunc1, testFunc2, testWithError, testFunc3]
 
       series(array, mockCallback)
       expect(mockCallback).toBeCalled()
@@ -206,7 +209,7 @@ describe('Series:', () => {
         expect(mockCallback.mock.calls.length).toEqual(1)
 
         done()
-      }, 200)
+      }, 300)
     })
     test('test simple', done => {
       const mockCallback = jest.fn()
@@ -251,14 +254,14 @@ describe('Series:', () => {
       expect.assertions(3)
 
       const arr = []
-      const f1 = cb => setTimeout(() => {
+      const f1 = cb => setTimeout((err, res) => {
         arr.push('f1_start')
-        cb()
+        cb(err, res)
         arr.push('f1_end')
       }, 120, null, 'res')
-      const f2 = cb => setTimeout(() => {
+      const f2 = cb => setTimeout((err, res) => {
         arr.push('f2_start')
-        cb()
+        cb(err, res)
         arr.push('f2_end')
       }, 120, null, 'res')
       const f3 = cb => {
@@ -266,9 +269,9 @@ describe('Series:', () => {
         cb()
         throw Error('LONG ERROR')
       }
-      const f4 = cb => setTimeout(() => {
+      const f4 = cb => setTimeout((err, res) => {
         arr.push('f4_start')
-        cb()
+        cb(err, res)
         arr.push('f4_end')
       }, 120, null, 'res')
       const f5 = cb => setTimeout((err, res) => {
@@ -305,14 +308,16 @@ describe('Series:', () => {
       series([f1, f2, f3, f4, f5, f6, f7, f8, f9, f10], mockCallback)
 
       setTimeout(() => {
+        console.log(mockCallback.mock.calls)
         expect(arr).toEqual([
           'f1_start', 'f1_end', 'f2_start', 'f3_start', 'f2_end', 'f4_start', 'f4_end'
         ])
         expect(mockCallback).toBeCalled()
+
         expect(mockCallback.mock.calls.length).toEqual(1)
 
         done()
-      }, 1000)
+      }, 3000)
     })
   })
 })

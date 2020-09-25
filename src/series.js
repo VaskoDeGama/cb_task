@@ -27,60 +27,21 @@
 
 function series (arrayOfFunctions, resultCb) {
   let wasErr = false
-
-  /**
-   * Gen and call next callback
-   * @param err
-   * @param res
-   * @param arr
-   * @param safeSCb
-   * @returns {*}
-   */
-
-  const nextCb = (err, res, arr, safeSCb) => {
-    if (err) {
-      wasErr = true
-      return safeSCb(err)
-    }
-
-    if (wasErr) {
-      arr = []
-    }
-
-    const nextF = arr.pop()
-
-    if (nextF) {
-      const safeNext = safeCbFabric(nextF)
-
-      try {
-        safeNext((err, res) => {
-          nextCb(err, res, arr, safeSCb)
-        })
-      } catch (error) {
-        wasErr = true
-        safeSCb(error)
-      }
-    } else {
-      safeSCb(null, res)
-    }
-  }
-
-  /**
- * fabric safe callbacks
- * @returns {*}
- */
+  let allDone = false
 
   const safeCbFabric = (cb) => {
-    let flag = false
+    let wasFlag = false
 
     return (err, res) => {
-      if (flag) {
+      if (wasFlag) {
         return false
       }
 
-      flag = true
+      wasFlag = true
 
-      cb(err, res)
+      if (!allDone) {
+        cb(err, res)
+      }
     }
   }
 
@@ -90,18 +51,37 @@ function series (arrayOfFunctions, resultCb) {
  * @param arr
  */
 
-  const runSeries = (arr, resCb) => {
-    const safeSCb = safeCbFabric(resCb)
-    const f = arr.pop()
+  const safeSCb = safeCbFabric(resultCb)
 
-    f((err, res) => {
-      nextCb(err, res, arr, safeSCb)
-    })
+  const allDoneSetter = (err, res) => {
+    safeSCb(err, res)
+    allDone = true
   }
 
-  const arr = [...arrayOfFunctions].reverse()
+  const arr = [...arrayOfFunctions]
+  const seriesFlow = arr.reduceRight((next, prev) => {
+    const safeNext = safeCbFabric(next)
 
-  runSeries(arr, resultCb)
+    return () => {
+      prev((err, res) => {
+        if (err) {
+          wasErr = true
+          return allDoneSetter(err)
+        }
+
+        try {
+          if (!wasErr) {
+            safeNext(null, res)
+          }
+        } catch (e) {
+          wasErr = true
+          allDoneSetter(e)
+        }
+      })
+    }
+  }, allDoneSetter)
+
+  seriesFlow()
 }
 
 module.exports = series
