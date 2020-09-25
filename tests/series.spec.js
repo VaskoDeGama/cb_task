@@ -64,7 +64,7 @@ describe('Series:', () => {
       }, 1000)
     })
   })
-  describe('Base tests:', () => {
+  describe('SYNC tests:', () => {
     test('well be define', () => {
       expect(series).toBeDefined()
     })
@@ -135,7 +135,7 @@ describe('Series:', () => {
       expect(mockCallback.mock.calls.length).toEqual(1)
     })
   })
-  describe('my tests', () => {
+  describe('ASYNC more tests', () => {
     test('test only one error call', done => {
       const mockCallback = jest.fn()
 
@@ -247,6 +247,49 @@ describe('Series:', () => {
 
         done()
       }, 1500)
+    })
+    test('test long throw', done => {
+      const mockCallback = jest.fn()
+
+      expect.assertions(3)
+
+      const arr = Array.from({ length: 5 }).fill(0)
+      const f1 = cb => setTimeout(() => {
+        arr[0] = 1
+        cb()
+      }, 120, null, 'res')
+      const f2 = cb => setTimeout(() => {
+        arr[1] = 1
+        cb()
+      }, 120, null, 'res')
+      const f3 = cb => setTimeout(async () => {
+        cb()
+        arr[2] = 1
+        await new Promise(resolve => setTimeout(resolve, 2000))
+
+        const i = 1
+
+        i = 3
+      }, 10, null, 'res')
+      const f4 = cb => setTimeout(() => {
+        arr[3] = 1
+        cb()
+      }, 120, null, 'res')
+      const f5 = cb => setTimeout((err, res) => {
+        arr[4] = 1
+        cb(err, res)
+      }, 400, null, 'res')
+
+      series([f1, f2, f3, f4, f5], mockCallback)
+
+      setTimeout(() => {
+        expect(arr).toEqual([1, 1, 1, 1, 1])
+        console.log(mockCallback.mock.calls)
+        expect(mockCallback).toBeCalled()
+        expect(mockCallback.mock.calls.length).toEqual(1)
+
+        done()
+      }, 3000)
     })
   })
 })

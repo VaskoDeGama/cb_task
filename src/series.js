@@ -19,28 +19,32 @@
  * Задачу необходимо решить без использования Promise
  */
 
+/**
+ * Gen and call next callback
+ * @param err
+ * @param res
+ * @param arr
+ * @param safeSCb
+ * @returns {*}
+ */
 const nextCb = (err, res, arr, safeSCb) => {
   if (err) {
     return safeSCb(err)
   }
 
-  const nextF = safeCbFabric(arr.shift())
+  const nextF = safeCbFabric(arr.pop())
 
-  try {
-    if (nextF) {
-      nextF((err, res) => {
-        nextCb(err, res, arr, safeSCb)
-      })
-    } else {
-      safeSCb(null, res)
-    }
-  } catch (e) {
-    safeSCb(err)
+  if (nextF) {
+    nextF((err, res) => {
+      nextCb(err, res, arr, safeSCb)
+    })
+  } else {
+    safeSCb(null, res)
   }
 }
 
 /**
- * cb fabric callback
+ * fabric safe callbacks
  * @returns {*}
  */
 
@@ -62,68 +66,29 @@ const safeCbFabric = (cb) => {
 }
 
 /**
- * Series
+ * Series exp
  * @param resCb
  * @param arr
  */
 
 const runSeries = (arr, resCb) => {
   const safeSCb = safeCbFabric(resCb)
-  const f = arr.shift()
+
+  const f = arr.pop()
 
   f((err, res) => {
     nextCb(err, res, arr, safeSCb)
   })
 }
 
-// const [f1, f2, f3, f4, f5] = arr
-// let wasErr = false
-
-// f1((err, res) => {
-//   if (err) {
-//     wasErr = true
-//     resCb(err)
-//   } else if (!wasErr) {
-//     f2((err, res) => {
-//       if (err) {
-//         wasErr = true
-//         resCb(err)
-//       } else if (!wasErr) {
-//         f3((err, res) => {
-//           if (err) {
-//             wasErr = true
-//             resCb(err)
-//           } else if (!wasErr) {
-//             f4((err, res) => {
-//               if (err) {
-//                 wasErr = true
-//                 resCb(err)
-//               } else if (!wasErr) {
-//                 f5((err, res) => {
-//                   if (err) {
-//                     wasErr = true
-//                     resCb(err)
-//                   } else if (!wasErr) {
-//                     resCb(null, res)
-//                   }
-//                 })
-//               }
-//             })
-//           }
-//         })
-//       }
-//     })
-//   }
-// })
-
 /**
- * Wrapper
+ * HOF
  * @param arrayOfFunctions
  * @param resultCb
  */
 
 function series (arrayOfFunctions, resultCb) {
-  const arr = [...arrayOfFunctions]
+  const arr = [...arrayOfFunctions].reverse()
 
   runSeries(arr, resultCb)
 }
