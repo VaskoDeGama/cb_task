@@ -27,21 +27,40 @@
 
 function series (arrayOfFunctions, resultCb) {
   let wasErr = false
-  let allDone = false
 
   const safeCbFabric = (cb) => {
-    let wasFlag = false
+    let wasOneCall = false
 
     return (err, res) => {
-      if (wasFlag) {
+      if (wasOneCall) {
         return false
       }
 
-      wasFlag = true
-
-      if (!allDone) {
-        cb(err, res)
+      if (wasErr) {
+        return false
       }
+
+      wasOneCall = true
+
+      cb(err, res)
+    }
+  }
+
+  const safeResultCbFabric = (resultCb) => {
+    let allDone = false
+
+    return (err, res) => {
+      if (allDone) {
+        return false
+      }
+
+      if (err) {
+        wasErr = true
+      }
+
+      allDone = true
+
+      resultCb(err, res)
     }
   }
 
@@ -51,37 +70,28 @@ function series (arrayOfFunctions, resultCb) {
  * @param arr
  */
 
-  const safeSCb = safeCbFabric(resultCb)
-
-  const allDoneSetter = (err, res) => {
-    safeSCb(err, res)
-    allDone = true
-  }
+  const safeResultCb = safeResultCbFabric(resultCb)
 
   const arr = [...arrayOfFunctions]
-  const seriesFlow = arr.reduceRight((next, prev) => {
+  const runSeriesFlow = arr.reduceRight((next, prev) => {
     const safeNext = safeCbFabric(next)
 
     return () => {
       prev((err, res) => {
         if (err) {
-          wasErr = true
-          return allDoneSetter(err)
+          return safeResultCb(err)
         }
 
         try {
-          if (!wasErr) {
-            safeNext(null, res)
-          }
+          safeNext(null, res)
         } catch (e) {
-          wasErr = true
-          allDoneSetter(e)
+          safeResultCb(e)
         }
       })
     }
-  }, allDoneSetter)
+  }, safeResultCb)
 
-  seriesFlow()
+  runSeriesFlow()
 }
 
 module.exports = series

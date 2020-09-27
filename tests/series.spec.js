@@ -54,7 +54,6 @@ describe('Series:', () => {
 
       setTimeout(() => {
         expect(spy).toBeCalled()
-        console.log(spy.mock.calls)
         expect(spy.mock.calls.length).toEqual(1)
         expect(spy.mock.calls[0][1]).toEqual('res')
 
@@ -308,7 +307,6 @@ describe('Series:', () => {
       series([f1, f2, f3, f4, f5, f6, f7, f8, f9, f10], mockCallback)
 
       setTimeout(() => {
-        console.log(mockCallback.mock.calls)
         expect(arr).toEqual([
           'f1_start', 'f1_end', 'f2_start', 'f3_start', 'f2_end', 'f4_start', 'f4_end'
         ])

@@ -1,7 +1,7 @@
 const parallel = require('../src/parallel')
 
 describe('Parallel:', () => {
-  describe('Base tests:', () => {
+  describe('Sync tests:', () => {
     test('well be define', () => {
       expect(parallel).toBeDefined()
     })
@@ -74,7 +74,7 @@ describe('Parallel:', () => {
     })
   })
 
-  describe('my tests', () => {
+  describe('ASYNC tests', () => {
     test('test only one error call', done => {
       const mockCallback = jest.fn()
 

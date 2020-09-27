@@ -23,29 +23,29 @@
  * @returns {boolean}
  */
 function parallel (arrayOfFunctions, resultCb) {
-  try {
-    const cache = new Map()
-    let allDone = false
-    let wasError = false
+  const cache = new Map()
+  let allDone = false
+  let wasError = false
 
-    const watcher = (err, res) => {
-      if (err && !wasError) {
-        resultCb(err)
+  const watcher = (err, res) => {
+    if (err && !wasError) {
+      resultCb(err)
 
-        wasError = true
-      }
-
-      if (!cache.has(res)) {
-        cache.set(res, 1)
-      }
-
-      if (cache.size === arrayOfFunctions.length && !allDone && !wasError) {
-        resultCb(null)
-
-        allDone = true
-      }
+      wasError = true
     }
 
+    if (!cache.has(res)) {
+      cache.set(res, 1)
+    }
+
+    if (cache.size === arrayOfFunctions.length && !allDone && !wasError) {
+      resultCb(null)
+
+      allDone = true
+    }
+  }
+
+  try {
     arrayOfFunctions.forEach((item, idx) => {
       item((err) => watcher(err, idx))
     })
