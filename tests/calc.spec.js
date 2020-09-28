@@ -1,14 +1,5 @@
 const calc = require('../src/calc')
 
-const MIN = 0
-const MAX = 1000000
-
-function getRandomInt (min, max) {
-  min = Math.ceil(min)
-  max = Math.floor(max)
-  return Math.floor(Math.random() * (max - min) + min)
-}
-
 describe('Calc:', () => {
   describe('Base testes', () => {
     test('will be define', () => {
@@ -86,69 +77,162 @@ describe('Calc:', () => {
 
       expect(calc(frstNumber, scndNumber, operation, resultNumber).message).toBe('Out of input range')
     })
+    test('out of range 2', () => {
+      const frstNumber = 1000000
+      const scndNumber = 1000000
+      const operation = '*'
+      const resultNumber = 1000000000000
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
+    })
   })
-  describe('Random tests', () => {
-    test('Random test 1 +', () => {
-      const frstNumber = getRandomInt(MIN, MAX)
-      const scndNumber = getRandomInt(MIN, MAX)
+  describe('Broken IEEE 754', () => {
+    test('0.1 + 0.2 === 0.3', () => {
+      const frstNumber = 0.2
+      const scndNumber = 0.1
       const operation = '+'
-      const resultNumber = frstNumber + scndNumber
+      const resultNumber = 0.3
 
       expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
     })
-    test('Random test 2 -', () => {
-      const frstNumber = getRandomInt(MIN, MAX)
-      const scndNumber = getRandomInt(MIN, MAX)
-      const operation = '-'
-      const resultNumber = frstNumber - scndNumber
 
-      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
-    })
-    test('Random test 3 *', () => {
-      const frstNumber = getRandomInt(MIN, MAX)
-      const scndNumber = getRandomInt(MIN, MAX)
-      const operation = '*'
-      const resultNumber = frstNumber * scndNumber
-
-      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
-    })
-    test('Random test 4 /', () => {
-      const frstNumber = getRandomInt(MIN, MAX)
-      const scndNumber = getRandomInt(MIN, MAX)
-      const operation = '/'
-      const resultNumber = frstNumber / scndNumber
-
-      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
-    })
-    test('Random test 5 + (false)', () => {
-      const frstNumber = getRandomInt(MIN, MAX)
-      const scndNumber = getRandomInt(MIN, MAX)
+    test('10.1 + 10.2 === 20.3', () => {
+      const frstNumber = '10.2'
+      const scndNumber = '10.1'
       const operation = '+'
-      const resultNumber = frstNumber + scndNumber - 1
+      const resultNumber = 20.3
 
-      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(false)
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
     })
-    test('Random test 6 * (false)', () => {
-      const frstNumber = getRandomInt(MIN, MAX)
-      const scndNumber = getRandomInt(MIN, MAX)
-      const operation = '*'
-      const resultNumber = frstNumber * scndNumber - 1
 
-      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(false)
+    test('100.1 + 100.2 === 200.3', () => {
+      const frstNumber = '100.2'
+      const scndNumber = '100.1'
+      const operation = '+'
+      const resultNumber = 200.3
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
     })
-    test('Random test 7 * (false)', () => {
-      const frstNumber = getRandomInt(MIN, MAX)
-      const scndNumber = getRandomInt(MIN, MAX)
+
+    test('8.13  - 5.75 === 2.38', () => {
+      const frstNumber = '8.13'
+      const scndNumber = '5.75'
       const operation = '-'
-      const resultNumber = frstNumber - scndNumber - 1
+      const resultNumber = '2.38'
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
+    })
+    test('122.72  - 6.43 === 116.28', () => {
+      const frstNumber = '122.72'
+      const scndNumber = '6.43'
+      const operation = '-'
+      const resultNumber = '116.28999999999999'
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
+    })
+    test('80.04 * 8.66 === 693.14', () => {
+      const frstNumber = '80.04'
+      const scndNumber = '8.66'
+      const operation = '*'
+      const resultNumber = '693.1464000000001'
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
+    })
+    test('3.37 * 3.33 === 11.22', () => {
+      const frstNumber = '3.37'
+      const scndNumber = '3.33'
+      const operation = '*'
+      const resultNumber = '11.222100000000001'
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
+    })
+    test('99.27 / 3 == 33.09', () => {
+      const frstNumber = '99.27'
+      const scndNumber = '3'
+      const operation = '/'
+      const resultNumber = '33.089999999999996'
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
+    })
+    test('32.76 / 9 == 3.63', () => {
+      const frstNumber = '32.76'
+      const scndNumber = '9'
+      const operation = '/'
+      const resultNumber = '3.6399999999999997'
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
+    })
+    test('10^5 + 10^5 != 2*10^5 + 0.1 / (false)', () => {
+      const frstNumber = 100000
+      const scndNumber = 100000
+      const operation = '+'
+      const resultNumber = 200000.1
 
       expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(false)
     })
-    test('Random test 8 / (false)', () => {
-      const frstNumber = getRandomInt(MIN, MAX)
-      const scndNumber = getRandomInt(MIN, MAX)
+  })
+  describe('Some tests', () => {
+    test('test 1 +', () => {
+      const frstNumber = 10
+      const scndNumber = 10
+      const operation = '+'
+      const resultNumber = 20
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
+    })
+    test('test 2 -', () => {
+      const frstNumber = 20
+      const scndNumber = 10
+      const operation = '-'
+      const resultNumber = 10
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
+    })
+    test('test 3 *', () => {
+      const frstNumber = 2
+      const scndNumber = 10
+      const operation = '*'
+      const resultNumber = 20
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
+    })
+    test('test 4 /', () => {
+      const frstNumber = 20
+      const scndNumber = 10
       const operation = '/'
-      const resultNumber = frstNumber / scndNumber - 1
+      const resultNumber = 2
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(true)
+    })
+    test('test 5 + (false)', () => {
+      const frstNumber = 10
+      const scndNumber = 10
+      const operation = '+'
+      const resultNumber = 19
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(false)
+    })
+    test('test 6 * (false)', () => {
+      const frstNumber = 10
+      const scndNumber = 5
+      const operation = '*'
+      const resultNumber = 49
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(false)
+    })
+    test('test 7 * (false)', () => {
+      const frstNumber = 10
+      const scndNumber = 2
+      const operation = '-'
+      const resultNumber = 7
+
+      expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(false)
+    })
+    test('test 8 / (false)', () => {
+      const frstNumber = 10
+      const scndNumber = 10
+      const operation = '/'
+      const resultNumber = 0
 
       expect(calc(frstNumber, scndNumber, operation, resultNumber)).toBe(false)
     })
